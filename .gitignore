@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build / cache
+dist/
+build/
+.cache/
+coverage/
+.vercel/
+contracts/cache/
+contracts/artifacts/
+contracts/typechain-types/
+contracts/coverage/
+frontend/dist/
+vercel-deploy/dist/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.local
+**/.env.production.local
+
+# Logs & OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Local deploy artifacts (regenerated)
+contracts/deployments/
+backend/config/deployment.json
+backend/config/VotingSystem.json
+# Keep placeholders in frontend config if present; ignore generated ABI dumps with secrets none
+
+# Screenshots optional large binaries — keep small set
+# screenshots/*.png
+
+# Package locks at root of nested installs can stay tracked
+package-lock.json
+!**/package-lock.json

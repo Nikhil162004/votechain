@@ -1,0 +1,30 @@
+{
+  "name": "decentralized-evoting",
+  "version": "1.0.0",
+  "description": "Decentralized E-Voting System with Identity Verification",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd contracts && npm install && cd ../backend && npm install && cd ../frontend && npm install",
+    "compile": "cd contracts && npx hardhat compile",
+    "node": "cd contracts && npx hardhat node",
+    "deploy:local": "cd contracts && npx hardhat run scripts/deploy.js --network localhost",
+    "deploy:ganache": "cd contracts && npx hardhat run scripts/deploy.js --network ganache",
+    "test:contracts": "cd contracts && npx hardhat test",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "echo 'Run in separate terminals: npm run node | npm run deploy:local | npm run backend | npm run frontend'"
+  },
+  "keywords": [
+    "blockchain",
+    "voting",
+    "solidity",
+    "web3",
+    "ethereum"
+  ],
+  "license": "MIT"
+}
