@@ -1,0 +1,190 @@
+{
+  "version": 2,
+  "updatedAt": "2026-08-10T13:25:52.639Z",
+  "voters": {
+    "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
+      "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
+      "nationalId": "VOTER-1001",
+      "name": "Demo Voter One",
+      "email": "voter1@demo.local",
+      "region": "Pune",
+      "phone": "",
+      "isAdmin": false,
+      "pinHash": "94caa69b6448c338953100a9434e116085b9289e853427b45f7fd0df38438b39",
+      "pin": "1001",
+      "verified": true,
+      "eligible": true,
+      "source": "seed-demo",
+      "registeredAt": "2026-08-10T13:25:52.639Z",
+      "electionsVoted": []
+    },
+    "5f8d60963558f461f0934a7b7f139794ecf6cf8f24ec5c7636e4d50b863da2bb": {
+      "idHash": "5f8d60963558f461f0934a7b7f139794ecf6cf8f24ec5c7636e4d50b863da2bb",
+      "nationalId": "VOTER-1002",
+      "name": "Demo Voter Two",
+      "email": "voter2@demo.local",
+      "region": "Mumbai",
+      "phone": "",
+      "isAdmin": false,
+      "pinHash": "a3c337885723e4e859610760ac5a3783614f1b96d31397daeae72059c2135363",
+      "pin": "1002",
+      "verified": true,
+      "eligible": true,
+      "source": "seed-demo",
+      "registeredAt": "2026-08-10T13:25:52.639Z",
+      "electionsVoted": []
+    },
+    "7be948b24f9e2e740ffe0fb940b19c5ddc0440f56256471a6a7541146053c6f4": {
+      "idHash": "7be948b24f9e2e740ffe0fb940b19c5ddc0440f56256471a6a7541146053c6f4",
+      "nationalId": "VOTER-1003",
+      "name": "Demo Voter Three",
+      "email": "voter3@demo.local",
+      "region": "Delhi",
+      "phone": "",
+      "isAdmin": false,
+      "pinHash": "c4b8f5646019e6f4f70c6bf14b8a17782a75cdab4d26ff185419f91037f71109",
+      "pin": "1003",
+      "verified": true,
+      "eligible": true,
+      "source": "seed-demo",
+      "registeredAt": "2026-08-10T13:25:52.639Z",
+      "electionsVoted": []
+    },
+    "039117878b3642cdd4e9d2680025be99fbbd682d3d7b66d12dc9c71c28ea7704": {
+      "idHash": "039117878b3642cdd4e9d2680025be99fbbd682d3d7b66d12dc9c71c28ea7704",
+      "nationalId": "VOTER-1004",
+      "name": "Demo Voter Four",
+      "email": "voter4@demo.local",
+      "region": "Bengaluru",
+      "phone": "",
+      "isAdmin": false,
+      "pinHash": "83e351b89d308a9c677ca29352b388992d6b8d7bed0fa6ec8f116af268215d6b",
+      "pin": "1004",
+      "verified": true,
+      "eligible": true,
+      "source": "seed-demo",
+      "registeredAt": "2026-08-10T13:25:52.639Z",
+      "electionsVoted": []
+    },
+    "e03a3bee7548d87eed85908ad373629e2cd08b7674ff01d0374a4d8f8823f932": {
+      "idHash": "e03a3bee7548d87eed85908ad373629e2cd08b7674ff01d0374a4d8f8823f932",
+      "nationalId": "VOTER-1005",
+      "name": "Demo Voter Five",
+      "email": "voter5@demo.local",
+      "region": "Hyderabad",
+      "phone": "",
+      "isAdmin": false,
+      "pinHash": "d368f7dbbaa7bb6a47383e732a40627fa280d17fae4261efabea0e65af3b70e6",
+      "pin": "1005",
+      "verified": true,
+      "eligible": true,
+      "source": "seed-demo",
+      "registeredAt": "2026-08-10T13:25:52.639Z",
+      "electionsVoted": []
+    },
+    "f0127ba657de4755be805ffbc033964706724b79aac833a2f2389c355c40c838": {
+      "idHash": "f0127ba657de4755be805ffbc033964706724b79aac833a2f2389c355c40c838",
+      "nationalId": "ADMIN-0001",
+      "name": "Election Admin",
+      "email": "admin@demo.local",
+      "region": "HQ",
+      "phone": "",
+      "isAdmin": true,
+      "pinHash": "a152b073ad9e6fca8cf115dd5c424e4c1d1ae4b663bd284a839d00d3ceb94a68",
+      "pin": "0001",
+      "verified": true,
+      "eligible": true,
+      "source": "seed-admin",
+      "registeredAt": "2026-08-10T13:25:52.639Z",
+      "electionsVoted": []
+    }
+  },
+  "nullifiers": {},
+  "events": [],
+  "elections": {
+    "1": {
+      "id": 1,
+      "title": "General Election 2026",
+      "description": "National parliamentary election — identity verified off-chain; ballots use cryptographic nullifiers.",
+      "startTime": 1786364752,
+      "endTime": 1788960352,
+      "status": 2,
+      "statusLabel": "Active",
+      "candidateCount": 4,
+      "totalVotes": 0,
+      "candidates": [
+        {
+          "id": 1,
+          "name": "Aarav Sharma",
+          "party": "Progressive Alliance",
+          "manifesto": "Focus on education, digital infrastructure, and green energy.",
+          "voteCount": 0,
+          "exists": true
+        },
+        {
+          "id": 2,
+          "name": "Priya Patel",
+          "party": "Unity Front",
+          "manifesto": "Healthcare for all, rural development, and job creation.",
+          "voteCount": 0,
+          "exists": true
+        },
+        {
+          "id": 3,
+          "name": "Rohan Mehta",
+          "party": "Future Party",
+          "manifesto": "Startup ecosystem, tax reform, and transparent governance.",
+          "voteCount": 0,
+          "exists": true
+        },
+        {
+          "id": 4,
+          "name": "Ananya Singh",
+          "party": "People First",
+          "manifesto": "Women empowerment, environmental protection, and social justice.",
+          "voteCount": 0,
+          "exists": true
+        }
+      ]
+    }
+  },
+  "DEMO_VOTERS": [
+    {
+      "nationalId": "VOTER-1001",
+      "name": "Demo Voter One",
+      "email": "voter1@demo.local",
+      "region": "Pune"
+    },
+    {
+      "nationalId": "VOTER-1002",
+      "name": "Demo Voter Two",
+      "email": "voter2@demo.local",
+      "region": "Mumbai"
+    },
+    {
+      "nationalId": "VOTER-1003",
+      "name": "Demo Voter Three",
+      "email": "voter3@demo.local",
+      "region": "Delhi"
+    },
+    {
+      "nationalId": "VOTER-1004",
+      "name": "Demo Voter Four",
+      "email": "voter4@demo.local",
+      "region": "Bengaluru"
+    },
+    {
+      "nationalId": "VOTER-1005",
+      "name": "Demo Voter Five",
+      "email": "voter5@demo.local",
+      "region": "Hyderabad"
+    },
+    {
+      "nationalId": "ADMIN-0001",
+      "name": "Election Admin",
+      "email": "admin@demo.local",
+      "region": "HQ",
+      "isAdmin": true
+    }
+  ]
+}
