@@ -1,6 +1,6 @@
 {
-  "version": 8,
-  "updatedAt": "2026-08-10T13:34:40.657Z",
+  "version": 9,
+  "updatedAt": "2026-08-10T13:34:41.730Z",
   "voters": {
     "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
       "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
@@ -108,6 +108,13 @@
     {
       "type": "CandidateAdded",
       "electionId": 2,
+      "candidateName": "Arjun Desai",
+      "timestamp": 1786368881,
+      "name": "Election Admin"
+    },
+    {
+      "type": "CandidateAdded",
+      "electionId": 2,
       "candidateName": "Riya Kapoor",
       "timestamp": 1786368880,
       "name": "Election Admin"
@@ -187,7 +194,7 @@
       "endTime": 1788804000,
       "status": 1,
       "statusLabel": "Upcoming",
-      "candidateCount": 1,
+      "candidateCount": 2,
       "totalVotes": 0,
       "candidates": [
         {
@@ -195,6 +202,14 @@
           "name": "Riya Kapoor",
           "party": "Campus United",
           "manifesto": "Better events and transparency.",
+          "voteCount": 0,
+          "exists": true
+        },
+        {
+          "id": 2,
+          "name": "Arjun Desai",
+          "party": "Innovate Now",
+          "manifesto": "Tech-first fest planning.",
           "voteCount": 0,
           "exists": true
         }
