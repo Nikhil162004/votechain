@@ -1,6 +1,6 @@
 {
-  "version": 6,
-  "updatedAt": "2026-08-10T13:34:37.336Z",
+  "version": 7,
+  "updatedAt": "2026-08-10T13:34:38.715Z",
   "voters": {
     "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
       "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
@@ -106,6 +106,13 @@
   },
   "events": [
     {
+      "type": "ElectionCreated",
+      "electionId": 2,
+      "title": "College Fest Election 2026",
+      "timestamp": 1786368878,
+      "name": "Election Admin"
+    },
+    {
       "type": "VoteCast",
       "electionId": 1,
       "candidateId": 2,
@@ -164,6 +171,20 @@
           "exists": true
         }
       ]
+    },
+    "2": {
+      "id": 2,
+      "title": "College Fest Election 2026",
+      "description": "Vote for fest coordinator. Upcoming election created by admin.",
+      "startTime": 1788256800,
+      "endTime": 1788804000,
+      "status": 1,
+      "statusLabel": "Upcoming",
+      "candidateCount": 0,
+      "totalVotes": 0,
+      "candidates": [],
+      "createdAt": "2026-08-10T13:34:38.715Z",
+      "createdBy": "ADMIN-0001"
     }
   },
   "DEMO_VOTERS": [
@@ -204,5 +225,6 @@
       "region": "HQ",
       "isAdmin": true
     }
-  ]
+  ],
+  "electionCounter": 2
 }
