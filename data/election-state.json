@@ -1,6 +1,6 @@
 {
-  "version": 9,
-  "updatedAt": "2026-08-10T13:34:41.730Z",
+  "version": 10,
+  "updatedAt": "2026-08-10T13:34:42.962Z",
   "voters": {
     "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
       "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
@@ -106,6 +106,13 @@
   },
   "events": [
     {
+      "type": "ElectionUpdated",
+      "electionId": 2,
+      "title": "College Fest Election 2026",
+      "timestamp": 1786368882,
+      "name": "Election Admin"
+    },
+    {
       "type": "CandidateAdded",
       "electionId": 2,
       "candidateName": "Arjun Desai",
@@ -192,8 +199,8 @@
       "description": "Vote for fest coordinator. Upcoming election created by admin.",
       "startTime": 1788256800,
       "endTime": 1788804000,
-      "status": 1,
-      "statusLabel": "Upcoming",
+      "status": 2,
+      "statusLabel": "Active",
       "candidateCount": 2,
       "totalVotes": 0,
       "candidates": [
