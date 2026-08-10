@@ -174,6 +174,36 @@ async function auth(req, res, next) {
   }
 }
 
+function adminOnly(req, res, next) {
+  if (!req.user?.isAdmin) {
+    return res.status(403).json({ error: "Admin only — login with ADMIN-0001" });
+  }
+  next();
+}
+
+const STATUS_LABELS = ["Draft", "Upcoming", "Active", "Ended", "Cancelled"];
+
+function parseWhen(value, fieldName) {
+  if (value == null || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value)) return Math.floor(value);
+  const t = Date.parse(String(value));
+  if (Number.isNaN(t)) {
+    const err = new Error(`Invalid ${fieldName || "date"}`);
+    err.status = 400;
+    throw err;
+  }
+  return Math.floor(t / 1000);
+}
+
+function nextElectionId(state) {
+  const ids = Object.keys(state.elections || {}).map(Number).filter((n) => !Number.isNaN(n));
+  const max = ids.length ? Math.max(...ids) : 0;
+  const counter = Math.max(Number(state.electionCounter || 0), max);
+  const id = counter + 1;
+  state.electionCounter = id;
+  return id;
+}
+
 // ── Routes ─────────────────────────────────────────────────────
 app.get("/api/health", async (_req, res) => {
   try {
@@ -553,21 +583,22 @@ app.get("/api/events/stream", async (req, res) => {
   }, 500);
 });
 
-app.get("/api/admin/audit", auth, async (req, res) => {
-  if (!req.user.isAdmin) return res.status(403).json({ error: "Admin only" });
+app.get("/api/admin/audit", auth, adminOnly, async (req, res) => {
   const state = await loadState();
   res.json({
-    log: (state.events || []).slice(0, 50).map((e) => ({
+    log: (state.events || []).slice(0, 80).map((e) => ({
       ts: new Date((e.timestamp || 0) * 1000).toISOString(),
       event: e.type,
       electionId: e.electionId,
       txHash: e.txHash,
+      title: e.title,
+      name: e.name,
+      candidateName: e.candidateName,
     })),
   });
 });
 
-app.get("/api/admin/voters", auth, async (req, res) => {
-  if (!req.user.isAdmin) return res.status(403).json({ error: "Admin only" });
+app.get("/api/admin/voters", auth, adminOnly, async (req, res) => {
   const state = await loadState();
   res.json({
     voters: Object.values(state.voters || {}).map((v) => ({
@@ -582,6 +613,239 @@ app.get("/api/admin/voters", auth, async (req, res) => {
       registeredAt: v.registeredAt || null,
     })),
   });
+});
+
+/** List all elections with candidates (admin management view) */
+app.get("/api/admin/elections", auth, adminOnly, async (_req, res) => {
+  const state = await loadState();
+  const elections = Object.values(state.elections || {})
+    .sort((a, b) => Number(b.id) - Number(a.id))
+    .map((e) => ({
+      ...electionPublic(e),
+      candidates: e.candidates || [],
+    }));
+  res.json({ elections, updatedAt: state.updatedAt });
+});
+
+/**
+ * Create election (admin only)
+ * body: { title, description, startTime, endTime, status? }
+ * startTime/endTime: ISO string or unix seconds
+ * status: 0 Draft | 1 Upcoming | 2 Active (default 1 Upcoming)
+ */
+app.post("/api/admin/elections", auth, adminOnly, async (req, res) => {
+  try {
+    const title = String(req.body?.title || "").trim();
+    const description = String(req.body?.description || "").trim();
+    if (!title || title.length < 3) {
+      return res.status(400).json({ error: "Title is required (min 3 characters)" });
+    }
+    if (!description) {
+      return res.status(400).json({ error: "Description is required" });
+    }
+
+    let startTime = parseWhen(req.body?.startTime, "startTime");
+    let endTime = parseWhen(req.body?.endTime, "endTime");
+    const now = Math.floor(Date.now() / 1000);
+    if (startTime == null) startTime = now + 3600; // default start in 1h
+    if (endTime == null) endTime = startTime + 7 * 24 * 3600; // default 7 days
+    if (endTime <= startTime) {
+      return res.status(400).json({ error: "End time must be after start time" });
+    }
+
+    let status = Number(req.body?.status);
+    if (![0, 1, 2, 3, 4].includes(status)) status = 1; // Upcoming
+
+    const state = await loadState();
+    if (!state.elections) state.elections = {};
+    const id = nextElectionId(state);
+
+    const election = {
+      id,
+      title,
+      description,
+      startTime,
+      endTime,
+      status,
+      statusLabel: STATUS_LABELS[status] || "Upcoming",
+      candidateCount: 0,
+      totalVotes: 0,
+      candidates: [],
+      createdAt: new Date().toISOString(),
+      createdBy: req.user.nationalId || "admin",
+    };
+    state.elections[String(id)] = election;
+    state.events.unshift({
+      type: "ElectionCreated",
+      electionId: id,
+      title,
+      timestamp: now,
+      name: req.user.name,
+    });
+    await saveState(state);
+
+    res.status(201).json({
+      ok: true,
+      election: { ...electionPublic(election), candidates: [] },
+      message: "Election created. Add candidates, then set status to Active when ready.",
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+/**
+ * Update election fields / status (admin only)
+ * body: { title?, description?, startTime?, endTime?, status? }
+ */
+app.patch("/api/admin/elections/:id", auth, adminOnly, async (req, res) => {
+  try {
+    const state = await loadState();
+    const e = state.elections[String(req.params.id)];
+    if (!e) return res.status(404).json({ error: "Election not found" });
+
+    if (req.body?.title != null) {
+      const t = String(req.body.title).trim();
+      if (t.length < 3) return res.status(400).json({ error: "Title too short" });
+      e.title = t;
+    }
+    if (req.body?.description != null) {
+      e.description = String(req.body.description).trim();
+    }
+    if (req.body?.startTime != null) e.startTime = parseWhen(req.body.startTime, "startTime");
+    if (req.body?.endTime != null) e.endTime = parseWhen(req.body.endTime, "endTime");
+    if (e.endTime <= e.startTime) {
+      return res.status(400).json({ error: "End time must be after start time" });
+    }
+
+    if (req.body?.status != null) {
+      const status = Number(req.body.status);
+      if (![0, 1, 2, 3, 4].includes(status)) {
+        return res.status(400).json({ error: "Invalid status (0–4)" });
+      }
+      if (status === 2 && (!e.candidates || e.candidates.length === 0)) {
+        return res.status(400).json({ error: "Add at least one candidate before activating" });
+      }
+      e.status = status;
+      e.statusLabel = STATUS_LABELS[status];
+    }
+
+    state.events.unshift({
+      type: "ElectionUpdated",
+      electionId: e.id,
+      title: e.title,
+      timestamp: Math.floor(Date.now() / 1000),
+      name: req.user.name,
+    });
+    await saveState(state);
+    res.json({ ok: true, election: { ...electionPublic(e), candidates: e.candidates } });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+/**
+ * Add candidate to election (admin only)
+ * body: { name, party, manifesto }
+ * Allowed while Draft or Upcoming (not after Ended/Cancelled; Active allows add only if no votes yet)
+ */
+app.post("/api/admin/elections/:id/candidates", auth, adminOnly, async (req, res) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    const party = String(req.body?.party || "").trim();
+    const manifesto = String(req.body?.manifesto || "").trim();
+    if (!name) return res.status(400).json({ error: "Candidate name is required" });
+    if (!party) return res.status(400).json({ error: "Party is required" });
+
+    const state = await loadState();
+    const e = state.elections[String(req.params.id)];
+    if (!e) return res.status(404).json({ error: "Election not found" });
+    if (e.status === 3 || e.status === 4) {
+      return res.status(400).json({ error: "Cannot add candidates to ended/cancelled elections" });
+    }
+    if (e.status === 2 && Number(e.totalVotes || 0) > 0) {
+      return res.status(400).json({ error: "Cannot add candidates after voting has started" });
+    }
+
+    if (!Array.isArray(e.candidates)) e.candidates = [];
+    const nextId = e.candidates.reduce((m, c) => Math.max(m, Number(c.id) || 0), 0) + 1;
+    const candidate = {
+      id: nextId,
+      name,
+      party,
+      manifesto: manifesto || "No manifesto provided.",
+      voteCount: 0,
+      exists: true,
+    };
+    e.candidates.push(candidate);
+    e.candidateCount = e.candidates.length;
+
+    state.events.unshift({
+      type: "CandidateAdded",
+      electionId: e.id,
+      candidateName: name,
+      timestamp: Math.floor(Date.now() / 1000),
+      name: req.user.name,
+    });
+    await saveState(state);
+
+    res.status(201).json({
+      ok: true,
+      candidate,
+      election: { ...electionPublic(e), candidates: e.candidates },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Remove candidate (admin only) — only before any votes
+ */
+app.delete("/api/admin/elections/:id/candidates/:candidateId", auth, adminOnly, async (req, res) => {
+  const state = await loadState();
+  const e = state.elections[String(req.params.id)];
+  if (!e) return res.status(404).json({ error: "Election not found" });
+  if (Number(e.totalVotes || 0) > 0) {
+    return res.status(400).json({ error: "Cannot remove candidates after votes exist" });
+  }
+  const cid = Number(req.params.candidateId);
+  const before = e.candidates?.length || 0;
+  e.candidates = (e.candidates || []).filter((c) => Number(c.id) !== cid);
+  if (e.candidates.length === before) {
+    return res.status(404).json({ error: "Candidate not found" });
+  }
+  e.candidateCount = e.candidates.length;
+  state.events.unshift({
+    type: "CandidateRemoved",
+    electionId: e.id,
+    timestamp: Math.floor(Date.now() / 1000),
+    name: req.user.name,
+  });
+  await saveState(state);
+  res.json({ ok: true, election: { ...electionPublic(e), candidates: e.candidates } });
+});
+
+/**
+ * Delete election (admin only) — only if zero votes
+ */
+app.delete("/api/admin/elections/:id", auth, adminOnly, async (req, res) => {
+  const state = await loadState();
+  const e = state.elections[String(req.params.id)];
+  if (!e) return res.status(404).json({ error: "Election not found" });
+  if (Number(e.totalVotes || 0) > 0) {
+    return res.status(400).json({ error: "Cannot delete an election that already has votes. End or cancel it instead." });
+  }
+  delete state.elections[String(req.params.id)];
+  state.events.unshift({
+    type: "ElectionDeleted",
+    electionId: Number(req.params.id),
+    title: e.title,
+    timestamp: Math.floor(Date.now() / 1000),
+    name: req.user.name,
+  });
+  await saveState(state);
+  res.json({ ok: true });
 });
 
 export default app;

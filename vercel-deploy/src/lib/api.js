@@ -90,6 +90,30 @@ export const api = {
   recentEvents: () => request("/api/events/recent"),
   adminAudit: () => request("/api/admin/audit"),
   adminVoters: () => request("/api/admin/voters"),
+  adminElections: () => request("/api/admin/elections"),
+  adminCreateElection: (payload) =>
+    request("/api/admin/elections", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  adminUpdateElection: (id, payload) =>
+    request(`/api/admin/elections/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  adminAddCandidate: (electionId, payload) =>
+    request(`/api/admin/elections/${electionId}/candidates`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  adminRemoveCandidate: (electionId, candidateId) =>
+    request(`/api/admin/elections/${electionId}/candidates/${candidateId}`, {
+      method: "DELETE",
+    }),
+  adminDeleteElection: (id) =>
+    request(`/api/admin/elections/${id}`, {
+      method: "DELETE",
+    }),
 };
 
 export function openEventStream(onMessage) {

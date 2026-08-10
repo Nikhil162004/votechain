@@ -3,7 +3,7 @@ import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
 import deploymentFallback from "../config/deployment.json";
 import abiFile from "../config/VotingSystem.json";
 
-export const STATUS_LABELS = ["Draft", "Registration", "Active", "Ended", "Cancelled"];
+export const STATUS_LABELS = ["Draft", "Upcoming", "Active", "Ended", "Cancelled"];
 export const STATUS_CLASS = ["draft", "draft", "active", "ended", "cancelled"];
 
 const PARTY_COLORS = ["#818cf8", "#34d399", "#fbbf24", "#f472b6", "#22d3ee", "#fb923c"];
