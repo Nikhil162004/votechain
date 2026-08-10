@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "updatedAt": "2026-08-10T13:25:54.206Z",
+  "updatedAt": "2026-08-10T13:25:55.201Z",
   "voters": {
     "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
       "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
@@ -48,7 +48,9 @@
       "eligible": true,
       "source": "seed-demo",
       "registeredAt": "2026-08-10T13:25:52.639Z",
-      "electionsVoted": []
+      "electionsVoted": [
+        1
+      ]
     },
     "039117878b3642cdd4e9d2680025be99fbbd682d3d7b66d12dc9c71c28ea7704": {
       "idHash": "039117878b3642cdd4e9d2680025be99fbbd682d3d7b66d12dc9c71c28ea7704",
@@ -99,8 +101,24 @@
       "electionsVoted": []
     }
   },
-  "nullifiers": {},
-  "events": [],
+  "nullifiers": {
+    "1:0x8a8ba0ff3f446117e9cdfb598550856fca86106bb08da66b2336673135e1fe26": true
+  },
+  "events": [
+    {
+      "type": "VoteCast",
+      "electionId": 1,
+      "candidateId": 2,
+      "nullifier": "0x8a8ba0ff3f446117e9cdfb598550856fca86106bb08da66b2336673135e1fe26",
+      "caster": "0xDemoCaster000000000000000000000000000001",
+      "newCandidateTally": 1,
+      "newTotalVotes": 1,
+      "timestamp": 1786368355,
+      "txHash": "0xbe0046a9b172ceb2108094556012d428165b18df660e430eadf7d13d5a394bfa",
+      "blockNumber": 1001,
+      "mode": "demo"
+    }
+  ],
   "elections": {
     "1": {
       "id": 1,
@@ -111,7 +129,7 @@
       "status": 2,
       "statusLabel": "Active",
       "candidateCount": 4,
-      "totalVotes": 0,
+      "totalVotes": 1,
       "candidates": [
         {
           "id": 1,
@@ -126,7 +144,7 @@
           "name": "Priya Patel",
           "party": "Unity Front",
           "manifesto": "Healthcare for all, rural development, and job creation.",
-          "voteCount": 0,
+          "voteCount": 1,
           "exists": true
         },
         {
