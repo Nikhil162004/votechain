@@ -1,6 +1,6 @@
 {
-  "version": 7,
-  "updatedAt": "2026-08-10T13:34:38.715Z",
+  "version": 8,
+  "updatedAt": "2026-08-10T13:34:40.657Z",
   "voters": {
     "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
       "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
@@ -106,6 +106,13 @@
   },
   "events": [
     {
+      "type": "CandidateAdded",
+      "electionId": 2,
+      "candidateName": "Riya Kapoor",
+      "timestamp": 1786368880,
+      "name": "Election Admin"
+    },
+    {
       "type": "ElectionCreated",
       "electionId": 2,
       "title": "College Fest Election 2026",
@@ -180,9 +187,18 @@
       "endTime": 1788804000,
       "status": 1,
       "statusLabel": "Upcoming",
-      "candidateCount": 0,
+      "candidateCount": 1,
       "totalVotes": 0,
-      "candidates": [],
+      "candidates": [
+        {
+          "id": 1,
+          "name": "Riya Kapoor",
+          "party": "Campus United",
+          "manifesto": "Better events and transparency.",
+          "voteCount": 0,
+          "exists": true
+        }
+      ],
       "createdAt": "2026-08-10T13:34:38.715Z",
       "createdBy": "ADMIN-0001"
     }
