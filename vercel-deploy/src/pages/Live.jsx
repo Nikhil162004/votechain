@@ -9,6 +9,7 @@ export default function Live() {
   const [elections, setElections] = useState([]);
   const [selected, setSelected] = useState(null);
   const [results, setResults] = useState(null);
+  const [updatedAt, setUpdatedAt] = useState(null);
 
   const load = async () => {
     try {
@@ -20,6 +21,7 @@ export default function Live() {
         setSelected(Number(pick));
         const r = await api.results(pick);
         setResults(r);
+        setUpdatedAt(r.updatedAt || d.updatedAt || new Date().toISOString());
       }
     } catch {
       /* ignore */
@@ -28,13 +30,19 @@ export default function Live() {
 
   useEffect(() => {
     load();
-    const t = setInterval(load, 12000);
+    const t = setInterval(load, 2500);
     return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
     if (!selected) return;
-    api.results(selected).then(setResults).catch(() => {});
+    api
+      .results(selected)
+      .then((r) => {
+        setResults(r);
+        setUpdatedAt(r.updatedAt || new Date().toISOString());
+      })
+      .catch(() => {});
   }, [selected]);
 
   const current = elections.find((e) => e.id === selected);
@@ -43,7 +51,10 @@ export default function Live() {
     <div className="container">
       <div className="page-title">
         <h1>Live tallies</h1>
-        <p>Results stream from smart-contract VoteCast events — publicly auditable</p>
+        <p>
+          Shared store results — auto-refresh every 2.5s
+          {updatedAt ? ` · last update ${new Date(updatedAt).toLocaleTimeString()}` : ""}
+        </p>
       </div>
 
       <section className="section">
@@ -58,7 +69,7 @@ export default function Live() {
               >
                 {elections.map((e) => (
                   <option key={e.id} value={e.id}>
-                    #{e.id} — {e.title}
+                    #{e.id} — {e.title} ({e.totalVotes} votes)
                   </option>
                 ))}
               </select>

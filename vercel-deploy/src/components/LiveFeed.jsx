@@ -16,7 +16,7 @@ export default function LiveFeed({ electionId = null, compact = false }) {
 
     load();
     // Poll works on Vercel serverless; SSE is best-effort
-    poll = setInterval(load, 4000);
+    poll = setInterval(load, 2500);
 
     try {
       es = openEventStream((msg) => {

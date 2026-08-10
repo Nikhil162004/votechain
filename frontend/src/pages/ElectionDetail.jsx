@@ -33,25 +33,45 @@ export default function ElectionDetail() {
   const [step, setStep] = useState(0);
   const [showWalletPath, setShowWalletPath] = useState(false);
   const [permit, setPermit] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  const applySnapshot = useCallback((payload) => {
+    if (payload?.election) setElection(payload.election);
+    if (payload?.candidates) setCandidates(payload.candidates);
+    if (payload?.results) setResults(payload.results);
+    if (payload?.updatedAt) setLastUpdated(payload.updatedAt);
+  }, []);
+
+  const load = useCallback(async (opts = {}) => {
+    const silent = !!opts.silent;
+    if (!silent) {
+      setLoading(true);
+      setError("");
+    }
     try {
       const data = await api.election(id);
+      const r = await api.results(id);
       setElection(data.election);
       setCandidates(data.candidates || []);
-      const r = await api.results(id);
       setResults(r);
+      setLastUpdated(r.updatedAt || data.updatedAt || new Date().toISOString());
     } catch (e) {
-      setError(e.message);
+      if (!silent) setError(e.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [id]);
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  // Fast auto-refresh tallies every 2.5s
+  useEffect(() => {
+    const t = setInterval(() => {
+      load({ silent: true });
+    }, 2500);
+    return () => clearInterval(t);
   }, [load]);
 
   useEffect(() => {
@@ -83,23 +103,29 @@ export default function ElectionDetail() {
       if (!isAuthenticated) throw new Error("Login required");
       if (!selected) throw new Error("Select a candidate first");
 
-      setInfo("Verifying identity, issuing nullifier permit, and submitting on-chain…");
+      setInfo("Submitting secure ballot…");
       const data = await api.castDemo(Number(id), selected);
+
+      // Instant UI update from response — no waiting for another fetch
+      if (data.results) setResults(data.results);
+      if (data.election) setElection(data.election);
+      if (data.candidates) setCandidates(data.candidates);
+      setLastUpdated(new Date().toISOString());
 
       setTxHash(data.txHash);
       setStep(3);
       setAlreadyVoted(true);
-      setInfo(
-        `Vote confirmed on-chain! Tx ${data.txHash.slice(0, 12)}… · nullifier burned for this election.`
-      );
-      if (data.results) setResults(data.results);
+      setInfo(`Vote recorded! Results updated instantly. Ref: ${data.txHash.slice(0, 12)}…`);
+
       await refresh().catch(() => {});
-      await load();
+      // Background confirm sync (does not wipe optimistic results)
+      setTimeout(() => load({ silent: true }), 800);
     } catch (e) {
       console.error(e);
       if (e.data?.alreadyVoted) {
         setAlreadyVoted(true);
         setStep(3);
+        if (e.data.results) setResults(e.data.results);
       }
       setError(e.message || "Vote failed");
     } finally {
@@ -160,7 +186,7 @@ export default function ElectionDetail() {
       } catch {
         /* non-fatal */
       }
-      await load();
+      await load({ silent: true });
       setPermit(null);
     } catch (e) {
       console.error(e);
@@ -170,7 +196,7 @@ export default function ElectionDetail() {
       }
       if (msg.includes("could not detect network") || msg.includes("Failed to fetch")) {
         msg =
-          "MetaMask cannot reach the local Hardhat chain from this environment. Use the one-click Cast Vote button instead.";
+          "MetaMask cannot reach the local chain. Use the one-click Cast Vote button instead.";
       }
       setError(msg);
     } finally {
@@ -197,6 +223,15 @@ export default function ElectionDetail() {
 
   const canVote = election.status === 2 && !alreadyVoted;
   const selectedCandidate = candidates.find((c) => c.id === selected);
+  const chartCandidates =
+    results?.candidates ||
+    candidates.map((c) => ({
+      id: c.id,
+      name: c.name,
+      party: c.party,
+      votes: c.voteCount,
+    }));
+  const chartTotal = results?.totalVotes ?? election.totalVotes ?? 0;
 
   return (
     <div className="container">
@@ -216,7 +251,12 @@ export default function ElectionDetail() {
         <div className="meta-row" style={{ marginTop: 12 }}>
           <span>Start {formatTs(election.startTime)}</span>
           <span>End {formatTs(election.endTime)}</span>
-          <span>{election.totalVotes} votes cast</span>
+          <span>
+            <strong>{chartTotal}</strong> votes cast
+          </span>
+          {lastUpdated && (
+            <span className="text-muted">Updated {new Date(lastUpdated).toLocaleTimeString()}</span>
+          )}
         </div>
       </div>
 
@@ -263,9 +303,8 @@ export default function ElectionDetail() {
               {isAuthenticated && canVote && (
                 <>
                   <div className="alert alert-info mt-2" style={{ marginBottom: 0 }}>
-                    <strong>One-click demo vote</strong> — identity is verified, a nullifier permit is
-                    signed, and the ballot is submitted to the smart contract. No MetaMask needed in
-                    this cloud sandbox.
+                    <strong>One-click vote</strong> — identity verified, nullifier issued, tally
+                    updates instantly for everyone.
                   </div>
 
                   <button
@@ -293,8 +332,7 @@ export default function ElectionDetail() {
                   {showWalletPath && (
                     <div className="mt-2" style={{ display: "grid", gap: "0.5rem" }}>
                       <p className="text-sm text-muted">
-                        Requires MetaMask on Hardhat Local (chainId 31337, RPC http://127.0.0.1:8545).
-                        This usually only works when you run the stack on your own machine.
+                        Requires MetaMask on a local chain. Prefer one-click vote on this demo.
                       </p>
                       {!account ? (
                         <button
@@ -331,53 +369,47 @@ export default function ElectionDetail() {
 
             <h2 style={{ fontSize: "1.2rem", marginBottom: "0.85rem" }}>Candidates</h2>
             <div style={{ display: "grid", gap: "0.85rem" }}>
-              {candidates.map((c, i) => (
-                <div
-                  key={c.id}
-                  className={`card candidate-card${selected === c.id ? " selected" : ""}`}
-                  onClick={() => canVote && !alreadyVoted && setSelected(c.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && canVote && setSelected(c.id)}
-                >
-                  <div className="candidate-head">
-                    <div className="avatar" style={{ background: partyColor(i) }}>
-                      {c.name.charAt(0)}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <h3>{c.name}</h3>
-                      <div className="party-tag">{c.party}</div>
-                      <p className="manifesto">{c.manifesto}</p>
-                      <div className="vote-count">
-                        On-chain votes: <strong>{c.voteCount}</strong>
-                        {selected === c.id && canVote && (
-                          <span style={{ color: "var(--primary-hover)", marginLeft: 8 }}>✓ Selected</span>
-                        )}
+              {candidates.map((c, i) => {
+                const liveVotes =
+                  results?.candidates?.find((x) => x.id === c.id)?.votes ?? c.voteCount ?? 0;
+                return (
+                  <div
+                    key={c.id}
+                    className={`card candidate-card${selected === c.id ? " selected" : ""}`}
+                    onClick={() => canVote && !alreadyVoted && setSelected(c.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && canVote && setSelected(c.id)}
+                  >
+                    <div className="candidate-head">
+                      <div className="avatar" style={{ background: partyColor(i) }}>
+                        {c.name.charAt(0)}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h3>{c.name}</h3>
+                        <div className="party-tag">{c.party}</div>
+                        <p className="manifesto">{c.manifesto}</p>
+                        <div className="vote-count">
+                          Votes: <strong>{liveVotes}</strong>
+                          {selected === c.id && canVote && (
+                            <span style={{ color: "var(--primary-hover)", marginLeft: 8 }}>✓ Selected</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           <div style={{ display: "grid", gap: "1rem", alignContent: "start" }}>
             <div className="card">
-              <ResultsChart
-                candidates={
-                  results?.candidates ||
-                  candidates.map((c) => ({
-                    id: c.id,
-                    name: c.name,
-                    party: c.party,
-                    votes: c.voteCount,
-                  }))
-                }
-                totalVotes={results?.totalVotes ?? election.totalVotes}
-              />
-              <button className="btn btn-ghost btn-sm mt-2" onClick={load}>
-                Refresh tallies
+              <ResultsChart candidates={chartCandidates} totalVotes={chartTotal} />
+              <button className="btn btn-ghost btn-sm mt-2" onClick={() => load({ silent: false })}>
+                Refresh tallies now
               </button>
+              <p className="text-sm text-muted mt-1">Auto-refreshes every 2.5s</p>
             </div>
             <LiveFeed electionId={election.id} />
           </div>
