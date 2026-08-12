@@ -1,6 +1,6 @@
 {
-  "version": 17,
-  "updatedAt": "2026-08-12T08:50:33.562Z",
+  "version": 18,
+  "updatedAt": "2026-08-12T08:50:48.521Z",
   "voters": {
     "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
       "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
@@ -16,7 +16,9 @@
       "eligible": true,
       "source": "seed-demo",
       "registeredAt": "2026-08-10T13:25:52.639Z",
-      "electionsVoted": []
+      "electionsVoted": [
+        2
+      ]
     },
     "5f8d60963558f461f0934a7b7f139794ecf6cf8f24ec5c7636e4d50b863da2bb": {
       "idHash": "5f8d60963558f461f0934a7b7f139794ecf6cf8f24ec5c7636e4d50b863da2bb",
@@ -126,9 +128,23 @@
   "nullifiers": {
     "1:0x8a8ba0ff3f446117e9cdfb598550856fca86106bb08da66b2336673135e1fe26": true,
     "1:0xef8f0cb1772a9c43fc2c81f2a6d02bea2a1511eefb69bebc7c6696dd0bdd9f46": true,
-    "2:0xedeb8c5f2c87029f451ceb1a4733bd416970f8e39c9204a7c054514bad928ea8": true
+    "2:0xedeb8c5f2c87029f451ceb1a4733bd416970f8e39c9204a7c054514bad928ea8": true,
+    "2:0x0db93253776ec90fa4c07568bd1beb8da05ad0c638aad6c140b8f97bcac95a15": true
   },
   "events": [
+    {
+      "type": "VoteCast",
+      "electionId": 2,
+      "candidateId": 2,
+      "nullifier": "0x0db93253776ec90fa4c07568bd1beb8da05ad0c638aad6c140b8f97bcac95a15",
+      "caster": "0xDemoCaster000000000000000000000000000001",
+      "newCandidateTally": 1,
+      "newTotalVotes": 2,
+      "timestamp": 1786524648,
+      "txHash": "0x9675064a413d10946e58916f1cedfc8bcb6976044dda059a892b96e037c5cef7",
+      "blockNumber": 1002,
+      "mode": "demo"
+    },
     {
       "type": "VoteCast",
       "electionId": 2,
@@ -258,7 +274,7 @@
       "status": 2,
       "statusLabel": "Active",
       "candidateCount": 2,
-      "totalVotes": 1,
+      "totalVotes": 2,
       "candidates": [
         {
           "id": 1,
@@ -273,7 +289,7 @@
           "name": "Arjun Desai",
           "party": "Innovate Now",
           "manifesto": "Tech-first fest planning.",
-          "voteCount": 0,
+          "voteCount": 1,
           "exists": true
         }
       ],
