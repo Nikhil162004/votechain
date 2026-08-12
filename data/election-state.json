@@ -1,6 +1,6 @@
 {
-  "version": 14,
-  "updatedAt": "2026-08-12T08:28:34.291Z",
+  "version": 15,
+  "updatedAt": "2026-08-12T08:49:04.259Z",
   "voters": {
     "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
       "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
@@ -101,6 +101,24 @@
       "source": "seed-admin",
       "registeredAt": "2026-08-10T13:25:52.639Z",
       "electionsVoted": []
+    },
+    "2a33349e7e606a8ad2e30e3c84521f9377450cf09083e162e0a9b1480ce0f972": {
+      "idHash": "2a33349e7e606a8ad2e30e3c84521f9377450cf09083e162e0a9b1480ce0f972",
+      "nationalId": "123456789012",
+      "name": "Nikhil",
+      "email": "nikhil@gmail.com",
+      "phone": "9122334455",
+      "region": "Maharashtra",
+      "dob": "2001-01-01",
+      "age": 25,
+      "isAdmin": false,
+      "pin": "1234",
+      "pinHash": "e131822751fc08b43996fc24e0c1e525adacc52189c951204b372cf0ef2625ba",
+      "verified": true,
+      "eligible": true,
+      "source": "self-registration",
+      "registeredAt": "2026-08-12T08:49:04.259Z",
+      "electionsVoted": []
     }
   },
   "nullifiers": {
@@ -108,6 +126,12 @@
     "1:0xef8f0cb1772a9c43fc2c81f2a6d02bea2a1511eefb69bebc7c6696dd0bdd9f46": true
   },
   "events": [
+    {
+      "type": "VoterRegistered",
+      "timestamp": 1786524544,
+      "name": "Nikhil",
+      "region": "Maharashtra"
+    },
     {
       "type": "VoteCast",
       "electionId": 1,
