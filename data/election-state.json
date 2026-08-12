@@ -1,6 +1,6 @@
 {
-  "version": 12,
-  "updatedAt": "2026-08-12T08:23:38.984Z",
+  "version": 13,
+  "updatedAt": "2026-08-12T08:23:50.734Z",
   "voters": {
     "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
       "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
@@ -66,7 +66,9 @@
       "eligible": true,
       "source": "seed-demo",
       "registeredAt": "2026-08-10T13:25:52.639Z",
-      "electionsVoted": []
+      "electionsVoted": [
+        1
+      ]
     },
     "e03a3bee7548d87eed85908ad373629e2cd08b7674ff01d0374a4d8f8823f932": {
       "idHash": "e03a3bee7548d87eed85908ad373629e2cd08b7674ff01d0374a4d8f8823f932",
@@ -102,9 +104,23 @@
     }
   },
   "nullifiers": {
-    "1:0x8a8ba0ff3f446117e9cdfb598550856fca86106bb08da66b2336673135e1fe26": true
+    "1:0x8a8ba0ff3f446117e9cdfb598550856fca86106bb08da66b2336673135e1fe26": true,
+    "1:0xef8f0cb1772a9c43fc2c81f2a6d02bea2a1511eefb69bebc7c6696dd0bdd9f46": true
   },
   "events": [
+    {
+      "type": "VoteCast",
+      "electionId": 1,
+      "candidateId": 4,
+      "nullifier": "0xef8f0cb1772a9c43fc2c81f2a6d02bea2a1511eefb69bebc7c6696dd0bdd9f46",
+      "caster": "0xDemoCaster000000000000000000000000000001",
+      "newCandidateTally": 1,
+      "newTotalVotes": 2,
+      "timestamp": 1786523030,
+      "txHash": "0x9567c6f0ceb3ddff6480d9b0aa16aa97c3bf79df642056e1ee436c20b83da811",
+      "blockNumber": 1002,
+      "mode": "demo"
+    },
     {
       "type": "ElectionUpdated",
       "electionId": 2,
@@ -157,7 +173,7 @@
       "status": 2,
       "statusLabel": "Active",
       "candidateCount": 4,
-      "totalVotes": 1,
+      "totalVotes": 2,
       "candidates": [
         {
           "id": 1,
@@ -188,7 +204,7 @@
           "name": "Ananya Singh",
           "party": "People First",
           "manifesto": "Women empowerment, environmental protection, and social justice.",
-          "voteCount": 0,
+          "voteCount": 1,
           "exists": true
         }
       ]
