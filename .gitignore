@@ -22,6 +22,7 @@ vercel-deploy/dist/
 **/.env
 **/.env.local
 **/.env.production.local
+backend/data/
 
 # Logs & OS
 *.log

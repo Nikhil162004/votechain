@@ -11,6 +11,7 @@ const fs = require("fs");
 const db = require("./db");
 const permit = require("./permit");
 const chain = require("./chain");
+const localElections = require("./localElections");
 const { validateRegistration, INDIAN_STATES } = require("./validation");
 
 const app = express();
@@ -80,18 +81,23 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.get("/api/config", (_req, res) => {
-  const depPath = path.join(__dirname, "..", "config", "deployment.json");
-  let deployment = null;
-  if (fs.existsSync(depPath)) {
-    deployment = JSON.parse(fs.readFileSync(depPath, "utf8"));
+  try {
+    const depPath = path.join(__dirname, "..", "config", "deployment.json");
+    let deployment = null;
+    if (fs.existsSync(depPath)) {
+      deployment = JSON.parse(fs.readFileSync(depPath, "utf8"));
+    }
+    res.json({
+      contractAddress: process.env.CONTRACT_ADDRESS || deployment?.address || null,
+      chainId: Number(process.env.CHAIN_ID || deployment?.chainId || 31337),
+      permitSigner: permit.getSignerAddress() || null,
+      domain: permit.getDomain() || null,
+      rpcUrl: process.env.PUBLIC_RPC_URL || null,
+      mode: "local",
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json({
-    contractAddress: process.env.CONTRACT_ADDRESS || deployment?.address || null,
-    chainId: Number(process.env.CHAIN_ID || deployment?.chainId || 31337),
-    permitSigner: permit.getSignerAddress(),
-    domain: permit.getDomain(),
-    rpcUrl: process.env.PUBLIC_RPC_URL || null,
-  });
 });
 
 // ─── Demo credentials (dev only) ───────────────────────────────
@@ -196,34 +202,75 @@ app.get("/api/auth/me", auth(true), (req, res) => {
   });
 });
 
-// ─── Elections (read via chain, fallback empty) ────────────────
+// ─── Elections (chain + local admin-created) ───────────────────
 app.get("/api/elections", async (_req, res) => {
+  let chainList = [];
   try {
-    const list = await chain.listElections();
-    res.json({ elections: list });
+    chainList = (await chain.listElections()) || [];
+    chainList = chainList.map((e) => ({ ...e, source: "chain" }));
   } catch (err) {
-    console.error(err);
-    res.status(502).json({ error: "Failed to read chain", detail: err.message });
+    console.warn("[elections] chain list failed:", err.message);
   }
+  const localList = localElections.list().map((e) => ({
+    id: e.id,
+    title: e.title,
+    description: e.description,
+    startTime: e.startTime,
+    endTime: e.endTime,
+    status: e.status,
+    statusLabel: e.statusLabel,
+    candidateCount: e.candidateCount,
+    totalVotes: e.totalVotes,
+    source: "local",
+  }));
+  // Prefer showing both; local ids are > 1000 so no clash with chain 1..n
+  const elections = [...chainList, ...localList].sort((a, b) => Number(a.id) - Number(b.id));
+  res.json({ elections, updatedAt: new Date().toISOString() });
 });
 
 app.get("/api/elections/:id", async (req, res) => {
+  const id = req.params.id;
   try {
-    const election = await chain.getElection(req.params.id);
+    if (localElections.isLocalId(id)) {
+      const e = localElections.get(id);
+      if (!e) return res.status(404).json({ error: "Election not found" });
+      return res.json({
+        election: localElections.publicElection(e),
+        candidates: e.candidates || [],
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    const election = await chain.getElection(id);
     if (!election) return res.status(404).json({ error: "Election not found" });
-    const candidates = await chain.getAllCandidates(req.params.id);
-    res.json({ election, candidates });
+    const candidates = await chain.getAllCandidates(id);
+    res.json({ election: { ...election, source: "chain" }, candidates });
   } catch (err) {
+    // fallback local
+    const e = localElections.get(id);
+    if (e) {
+      return res.json({
+        election: localElections.publicElection(e),
+        candidates: e.candidates || [],
+      });
+    }
     res.status(502).json({ error: err.message });
   }
 });
 
 app.get("/api/elections/:id/results", async (req, res) => {
+  const id = req.params.id;
   try {
-    const results = await chain.getResults(req.params.id);
+    if (localElections.isLocalId(id)) {
+      const e = localElections.get(id);
+      if (!e) return res.status(404).json({ error: "Not found" });
+      return res.json(localElections.resultsOf(e));
+    }
+    const results = await chain.getResults(id);
     if (!results) return res.status(404).json({ error: "Not found" });
-    res.json(results);
+    res.json({ ...results, updatedAt: new Date().toISOString() });
   } catch (err) {
+    const e = localElections.get(id);
+    if (e) return res.json(localElections.resultsOf(e));
     res.status(502).json({ error: err.message });
   }
 });
@@ -309,6 +356,36 @@ app.post("/api/vote/cast-demo", auth(true), permitLimiter, async (req, res) => {
     const { electionId, candidateId } = req.body || {};
     if (!electionId || !candidateId) {
       return res.status(400).json({ error: "electionId and candidateId are required" });
+    }
+
+    // Local admin-created elections (id > 1000)
+    if (localElections.isLocalId(electionId)) {
+      if (db.hasVoted(req.user.idHash, electionId)) {
+        const e = localElections.get(electionId);
+        return res.status(409).json({
+          error: "You have already voted in this election",
+          alreadyVoted: true,
+          results: e ? localElections.resultsOf(e) : null,
+        });
+      }
+      try {
+        const out = localElections.castVote(electionId, candidateId, req.user.idHash);
+        db.markVoted(req.user.idHash, electionId);
+        db.log("vote_cast_local", {
+          electionId: Number(electionId),
+          candidateId: Number(candidateId),
+          idHash: req.user.idHash.slice(0, 12),
+          txHash: out.txHash,
+        });
+        return res.json(out);
+      } catch (err) {
+        const status = err.status || 500;
+        return res.status(status).json({
+          error: err.message,
+          alreadyVoted: !!err.alreadyVoted,
+          results: err.results || undefined,
+        });
+      }
     }
 
     const election = await chain.getElection(electionId);
@@ -427,16 +504,148 @@ app.get("/api/events/stream", (req, res) => {
 });
 
 app.get("/api/events/recent", (_req, res) => {
-  res.json({ events: chain.getRecentVotes() });
+  const chainEvents = chain.getRecentVotes() || [];
+  const localEvents = localElections.recentVoteEvents(50);
+  const events = [...localEvents, ...chainEvents]
+    .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))
+    .slice(0, 50);
+  res.json({ events });
 });
 
 // ─── Admin ─────────────────────────────────────────────────────
 app.get("/api/admin/audit", auth(true), adminOnly, (_req, res) => {
-  res.json({ log: db.getAuditLog(200) });
+  const chainLog = db.getAuditLog(100);
+  const localLog = localElections.auditEvents(80).map((e) => ({
+    ts: new Date((e.timestamp || 0) * 1000).toISOString(),
+    event: e.type,
+    electionId: e.electionId,
+    txHash: e.txHash,
+    title: e.title,
+    name: e.name,
+    candidateName: e.candidateName,
+  }));
+  res.json({ log: [...localLog, ...chainLog].slice(0, 150) });
 });
 
 app.get("/api/admin/voters", auth(true), adminOnly, (_req, res) => {
   res.json({ voters: db.listVotersPublic() });
+});
+
+app.get("/api/admin/elections", auth(true), adminOnly, async (_req, res) => {
+  let chainList = [];
+  try {
+    const list = (await chain.listElections()) || [];
+    for (const e of list) {
+      let candidates = [];
+      try {
+        candidates = await chain.getAllCandidates(e.id);
+      } catch {
+        /* ignore */
+      }
+      chainList.push({
+        ...e,
+        source: "chain",
+        candidates: candidates.map((c) => ({
+          id: c.id,
+          name: c.name,
+          party: c.party,
+          manifesto: c.manifesto,
+          voteCount: c.voteCount,
+          exists: true,
+        })),
+      });
+    }
+  } catch (err) {
+    console.warn("[admin/elections] chain failed:", err.message);
+  }
+  const localList = localElections.list();
+  res.json({
+    elections: [...chainList, ...localList].sort((a, b) => Number(b.id) - Number(a.id)),
+    updatedAt: new Date().toISOString(),
+  });
+});
+
+app.post("/api/admin/elections", auth(true), adminOnly, (req, res) => {
+  try {
+    const election = localElections.create(req.body || {}, req.user.name || "admin");
+    res.status(201).json({
+      ok: true,
+      election: { ...localElections.publicElection(election), candidates: [] },
+      message: "Election created. Add candidates, then set status to Active when ready.",
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+app.patch("/api/admin/elections/:id", auth(true), adminOnly, (req, res) => {
+  try {
+    if (!localElections.isLocalId(req.params.id)) {
+      return res.status(400).json({
+        error: "On-chain seed elections cannot be edited here. Create a new election (id will be > 1000).",
+      });
+    }
+    const election = localElections.update(req.params.id, req.body || {}, req.user.name || "admin");
+    res.json({
+      ok: true,
+      election: { ...localElections.publicElection(election), candidates: election.candidates },
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+app.post("/api/admin/elections/:id/candidates", auth(true), adminOnly, (req, res) => {
+  try {
+    if (!localElections.isLocalId(req.params.id)) {
+      return res.status(400).json({
+        error: "Cannot add candidates to on-chain seed election from this panel. Create a new local election.",
+      });
+    }
+    const { election, candidate } = localElections.addCandidate(
+      req.params.id,
+      req.body || {},
+      req.user.name || "admin"
+    );
+    res.status(201).json({
+      ok: true,
+      candidate,
+      election: { ...localElections.publicElection(election), candidates: election.candidates },
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+app.delete("/api/admin/elections/:id/candidates/:candidateId", auth(true), adminOnly, (req, res) => {
+  try {
+    if (!localElections.isLocalId(req.params.id)) {
+      return res.status(400).json({ error: "Cannot modify on-chain seed election candidates here." });
+    }
+    const election = localElections.removeCandidate(
+      req.params.id,
+      req.params.candidateId,
+      req.user.name || "admin"
+    );
+    res.json({
+      ok: true,
+      election: { ...localElections.publicElection(election), candidates: election.candidates },
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+app.delete("/api/admin/elections/:id", auth(true), adminOnly, (req, res) => {
+  try {
+    if (!localElections.isLocalId(req.params.id)) {
+      return res.status(400).json({ error: "Cannot delete on-chain seed election from this panel." });
+    }
+    localElections.removeElection(req.params.id, req.user.name || "admin");
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
 });
 
 app.post("/api/admin/reload", auth(true), adminOnly, (_req, res) => {
