@@ -1,6 +1,6 @@
 {
-  "version": 15,
-  "updatedAt": "2026-08-12T08:49:04.259Z",
+  "version": 16,
+  "updatedAt": "2026-08-12T08:50:03.076Z",
   "voters": {
     "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9": {
       "idHash": "6f1a7ec9d5b61a1a053d85164dc9fec1587562f037fe449eda9e7a2b26379df9",
@@ -118,14 +118,30 @@
       "eligible": true,
       "source": "self-registration",
       "registeredAt": "2026-08-12T08:49:04.259Z",
-      "electionsVoted": []
+      "electionsVoted": [
+        2
+      ]
     }
   },
   "nullifiers": {
     "1:0x8a8ba0ff3f446117e9cdfb598550856fca86106bb08da66b2336673135e1fe26": true,
-    "1:0xef8f0cb1772a9c43fc2c81f2a6d02bea2a1511eefb69bebc7c6696dd0bdd9f46": true
+    "1:0xef8f0cb1772a9c43fc2c81f2a6d02bea2a1511eefb69bebc7c6696dd0bdd9f46": true,
+    "2:0xedeb8c5f2c87029f451ceb1a4733bd416970f8e39c9204a7c054514bad928ea8": true
   },
   "events": [
+    {
+      "type": "VoteCast",
+      "electionId": 2,
+      "candidateId": 1,
+      "nullifier": "0xedeb8c5f2c87029f451ceb1a4733bd416970f8e39c9204a7c054514bad928ea8",
+      "caster": "0xDemoCaster000000000000000000000000000001",
+      "newCandidateTally": 1,
+      "newTotalVotes": 1,
+      "timestamp": 1786524603,
+      "txHash": "0xdd6d1da2df6a986ec544b803225141a0b985b5a6241c40fbc7c5f80ab0b03255",
+      "blockNumber": 1001,
+      "mode": "demo"
+    },
     {
       "type": "VoterRegistered",
       "timestamp": 1786524544,
@@ -242,14 +258,14 @@
       "status": 2,
       "statusLabel": "Active",
       "candidateCount": 2,
-      "totalVotes": 0,
+      "totalVotes": 1,
       "candidates": [
         {
           "id": 1,
           "name": "Riya Kapoor",
           "party": "Campus United",
           "manifesto": "Better events and transparency.",
-          "voteCount": 0,
+          "voteCount": 1,
           "exists": true
         },
         {
