@@ -29,10 +29,16 @@ function loadDeployment() {
   return null;
 }
 
+// Hardhat account #0 — local demo only (matches deploy script default)
+const HARDHAT_ACCOUNT0_KEY =
+  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+
 function init() {
-  const key = process.env.PERMIT_SIGNER_KEY;
-  if (!key) {
-    throw new Error("PERMIT_SIGNER_KEY is required");
+  const key = process.env.PERMIT_SIGNER_KEY || HARDHAT_ACCOUNT0_KEY;
+  if (!process.env.PERMIT_SIGNER_KEY) {
+    console.warn(
+      "[permit] PERMIT_SIGNER_KEY not set — using Hardhat account #0 (local demo only). Run: npx hardhat run scripts/deploy.js --network localhost"
+    );
   }
   wallet = new ethers.Wallet(key);
 
